@@ -122,7 +122,6 @@ class Blockchain(object):
         return guess_hash[:3] == "000"
 
 
-        # return True or False
 
 
 # Instantiate our Node
