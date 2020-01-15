@@ -85,23 +85,6 @@ class Blockchain(object):
     def last_block(self):
         return self.chain[-1]
 
-    def proof_of_work(self, block):
-        """
-        Simple Proof of Work Algorithm
-        Stringify the block and look for a proof.
-        Loop through possibilities, checking each one against `valid_proof`
-        in an effort to find a number that is a valid proof
-        :return: A valid proof for the provided block
-        """
-        # TODO
-        block_string = json.dumps(block, sort_keys=True).encode()
-
-        proof = 0
-        while self.valid_proof(block_string, proof) is False:
-            proof += 1
-
-        return proof
-
     def valid_proof(self, block_string, proof):
         """
         Validates the Proof:  Does hash(block_string, proof) contain 3
@@ -132,19 +115,37 @@ blockchain = Blockchain()
 
 
 @app.route('/mine', methods=['POST'])
-def mine(request):
+def mine():
     # Run the proof of work algorithm to get the next proof
 
     # Forge the new Block by adding it to the chain with the proof
 
-    proof = blockchain.proof_of_work(blockchain.last_block)
+    data = request.get_json()
 
+    print(data)
+
+    if data['id'] != blockchain.last_block['index'] + 1:
+        response = {
+            'error': 'incorrect id',
+            'help': 'block may have been mined already'
+        }
+        return jsonify(response), 406
+
+    block_string = json.dumps(blockchain.last_block, sort_keys=True).encode()
     prev_hash = blockchain.hash(blockchain.last_block)
 
-    block = blockchain.new_block(proof, prev_hash)
+    if blockchain.valid_proof(block_string, data['proof']) is False:
+        response = {
+            'error': 'incorrect proof',
+            'help': 'your proof of work was incorrect'
+        }
+        return jsonify(response), 406
+
+    block = blockchain.new_block(data['proof'], prev_hash)
 
     response = {
-        'new_block': block
+        'new_block': block,
+        'message': 'verified'
     }
 
     return jsonify(response), 200
