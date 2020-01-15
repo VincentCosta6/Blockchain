@@ -47,7 +47,7 @@ class Blockchain(object):
         # Return the new block
         return block
 
-    def hash(block):
+    def hash(self, block):
         """
         Creates a SHA-256 hash of a Block
 
@@ -78,7 +78,7 @@ class Blockchain(object):
         # easier to work with and understand
 
         # TODO: Return the hashed block string in hexadecimal format
-        pass
+        return hex_hash
 
     @property
     def last_block(self):
@@ -93,8 +93,13 @@ class Blockchain(object):
         :return: A valid proof for the provided block
         """
         # TODO
-        pass
-        # return proof
+        block_string = json.dumps(block, sort_keys=True).encode()
+
+        proof = 0
+        while self.valid_proof(block_string, proof) is False:
+            proof += 1
+
+        return proof
 
     @staticmethod
     def valid_proof(block_string, proof):
@@ -109,7 +114,14 @@ class Blockchain(object):
         :return: True if the resulting hash is a valid proof, False otherwise
         """
         # TODO
-        pass
+
+
+        guess = f"{block_string}{proof}".encode()
+        guess_hash = hashlib.sha256(guess).hexdigest()
+
+        return guess_hash[:3] == "000"
+
+
         # return True or False
 
 
@@ -129,8 +141,14 @@ def mine():
 
     # Forge the new Block by adding it to the chain with the proof
 
+    proof = blockchain.proof_of_work(blockchain.last_block)
+
+    prev_hash = blockchain.hash(blockchain.last_block)
+
+    block = blockchain.new_block(proof, prev_hash)
+
     response = {
-        
+        'new_block': block
     }
 
     return jsonify(response), 200
